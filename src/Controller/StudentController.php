@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Entity\Student;
+use App\Application\Student\RegisterStudentService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,41 +19,27 @@ class StudentController extends AbstractController
     public function register(
         Request $request,
         SerializerInterface $serializer,
-        EntityManagerInterface $entityManager,
-        ValidatorInterface $validator
+        RegisterStudentService $registerStudent
     ): JsonResponse {
         try {
-            // Deserialize the request content to Student entity
-            $student = $serializer->deserialize($request->getContent(), Student::class, 'json');
-            
-            // Validate the entity
-            $violations = $validator->validate($student);
-            if (count($violations) > 0) {
-                $errors = [];
-                foreach ($violations as $violation) {
-                    $errors[$violation->getPropertyPath()] = $violation->getMessage();
-                }
-                
-                return $this->json([
-                    'error' => 'Validation failed',
-                    'details' => $errors
-                ], Response::HTTP_BAD_REQUEST);
-            }
-            
-            // Persist the student
-            $entityManager->persist($student);
-            $entityManager->flush();
+            $payload = json_decode($request->getContent(), true) ?? [];
+            $username = $payload['username'] ?? '';
+            $phone = $payload['phoneNumber'] ?? null;
+            $schoolId = isset($payload['schoolId']) ? (int)$payload['schoolId'] : null;
+
+            $student = $registerStudent->handle($username, $phone, $schoolId);
             
             return $this->json([
                 'message' => 'Student registered successfully',
                 'student' => [
-                    'id' => $student->getId(),
-                    'username' => $student->getUsername(),
-                    'phoneNumber' => $student->getPhoneNumber()
+                    'id' => $student->id()?->value(),
+                    'username' => (string)$student->username(),
+                    'phoneNumber' => $student->phoneNumber()?->value(),
+                    'schoolId' => $student->schoolId()?->value()
                 ]
             ], Response::HTTP_CREATED);
             
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return $this->json([
                 'error' => 'Failed to register student',
                 'message' => $e->getMessage()

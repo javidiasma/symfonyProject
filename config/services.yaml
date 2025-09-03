@@ -20,5 +20,9 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    # Bind domain repository interfaces to Doctrine implementations
+    App\Domain\School\SchoolRepository: '@App\Infrastructure\Persistence\Doctrine\Repository\DoctrineSchoolRepository'
+    App\Domain\Student\StudentRepository: '@App\Infrastructure\Persistence\Doctrine\Repository\DoctrineStudentRepository'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

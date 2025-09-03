@@ -26,6 +26,10 @@ class Student
     #[Assert\Regex(pattern: '/^\+?[1-9]\d{1,14}$/', message: 'Please provide a valid phone number')]
     private ?string $phoneNumber = null;
 
+    #[ORM\ManyToOne(targetEntity: School::class, inversedBy: 'students')]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?School $school = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -51,6 +55,18 @@ class Student
     public function setPhoneNumber(?string $phoneNumber): static
     {
         $this->phoneNumber = $phoneNumber;
+
+        return $this;
+    }
+
+    public function getSchool(): ?School
+    {
+        return $this->school;
+    }
+
+    public function setSchool(?School $school): static
+    {
+        $this->school = $school;
 
         return $this;
     }
